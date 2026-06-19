@@ -25,10 +25,10 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboard
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # ── КОНФИГ ────────────────────────────────────────────────────────────────────
-BOT_TOKEN = "8639123424:AAFDLGplijBYblxsqKZ88qxJ726oYlD02mU"
-API_ID    = 39357760
-API_HASH  = "4fb02c1fbb81c60f24f6b3251087c41e"
-ADMIN_IDS = {8434813604, 8577264553}
+BOT_TOKEN = os.environ["BOT_TOKEN"]
+API_ID    = int(os.environ["API_ID"])
+API_HASH  = os.environ["API_HASH"]
+ADMIN_IDS = set(int(x) for x in os.environ.get("ADMIN_IDS", "8434813604,8577264553").split(","))
 DB_FILE   = "parser.db"
 
 
