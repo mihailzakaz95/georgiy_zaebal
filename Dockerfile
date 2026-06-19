@@ -1,17 +1,16 @@
-FROM python:3.11-slim
+FROM python:3.11-slim-bookworm
 
-# Устанавливаем Chrome
 RUN apt-get update && apt-get install -y \
-    wget gnupg2 curl unzip \
-    libglib2.0-0 libnss3 libgconf-2-4 libfontconfig1 \
-    libxss1 libxtst6 libx11-xcb1 libxcb-dri3-0 \
-    libdrm2 libxcomposite1 libxdamage1 libxfixes3 \
-    libxrandr2 libgbm1 libasound2 libatk1.0-0 \
-    libatk-bridge2.0-0 libcups2 libxkbcommon0 \
-    && wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list \
-    && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    wget gnupg2 curl ca-certificates \
+    fonts-liberation libappindicator3-1 \
+    libasound2 libatk-bridge2.0-0 libatk1.0-0 \
+    libcups2 libdbus-1-3 libdrm2 libgbm1 \
+    libnspr4 libnss3 libxcomposite1 libxdamage1 \
+    libxfixes3 libxkbcommon0 libxrandr2 xdg-utils \
+    --no-install-recommends \
+    && wget -q https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
+    && apt-get install -y ./google-chrome-stable_current_amd64.deb \
+    && rm google-chrome-stable_current_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
