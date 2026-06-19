@@ -25,7 +25,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboard
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # ── КОНФИГ ────────────────────────────────────────────────────────────────────
-BOT_TOKEN = "8656669785:AAG90VY2i8GcLJ7_f1FXIzwInRNpzr8eyx4"
+BOT_TOKEN = "8639123424:AAFDLGplijBYblxsqKZ88qxJ726oYlD02mU"
 API_ID    = 31970431
 API_HASH  = "666358d5278cd72050cfe82e79dd49fb"
 ADMIN_IDS = {8434813604, 8577264553}
@@ -109,8 +109,19 @@ def make_driver():
         if os.path.exists(path):
             chrome_binary = path
             break
+    # Автоопределение версии Chrome
+    chrome_version = None
+    try:
+        import subprocess
+        binary = chrome_binary or "google-chrome"
+        out = subprocess.run([binary, "--version"], capture_output=True, text=True, timeout=5)
+        chrome_version = int(out.stdout.strip().split()[-1].split(".")[0])
+        log.info(f"Chrome version: {chrome_version}")
+    except Exception:
+        pass
     drv = uc.Chrome(options=opts, headless=True, use_subprocess=True,
-                    browser_executable_path=chrome_binary)
+                    browser_executable_path=chrome_binary,
+                    **( {"version_main": chrome_version} if chrome_version else {} ))
     drv.set_page_load_timeout(20)
     return drv
 
@@ -118,10 +129,10 @@ def _scroll(driver):
     try:
         cont = driver.find_element(By.CSS_SELECTOR, LIST_SEL)
         last = no_ch = 0
-        for _ in range(60):
+        for _ in range(25):
             if stop_flag: break
             driver.execute_script("arguments[0].lastElementChild.scrollIntoView();", cont)
-            time.sleep(random.uniform(3.0, 5.0))
+            time.sleep(random.uniform(1.5, 2.5))
             cnt = len(driver.find_elements(By.CSS_SELECTOR, SNIPPET_SEL))
             if cnt == last:
                 no_ch += 1
@@ -152,7 +163,7 @@ def _get_contacts(driver, url):
     if url == "—": return "—", "—"
     try:
         driver.get(url)
-        time.sleep(random.uniform(2.5, 4.0))
+        time.sleep(random.uniform(1.5, 2.5))
         phones = []
         def collect():
             for a in driver.find_elements(By.CSS_SELECTOR, "a[href^='tel:']"):
@@ -210,7 +221,7 @@ def parse_sync(niche, city, limit, chat_id=None):
             return results
         box = driver.find_element(By.CSS_SELECTOR, "input.input__control")
         box.clear(); box.send_keys(f"{niche}, {city}"); time.sleep(1)
-        box.send_keys(Keys.ENTER); time.sleep(8)
+        box.send_keys(Keys.ENTER); time.sleep(5)
         _scroll(driver)
         cards = driver.find_elements(By.CSS_SELECTOR, SNIPPET_SEL)
         log.info(f"  Карточек: {len(cards)}")
@@ -276,7 +287,7 @@ async def run_parse_and_send(update: Update, ctx: ContextTypes.DEFAULT_TYPE,
     )
 
     try:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         orgs = await loop.run_in_executor(None, parse_sync, niche, city, limit, update.effective_chat.id)
 
         if not orgs:
@@ -619,7 +630,7 @@ async def handle_msg(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 # ── ЗАПУСК ────────────────────────────────────────────────────────────────────
 async def post_init(app: Application):
     global tg_client
-    for name in ["userbot_session", "session_79872582765"]:
+    for name in ["userbot_session", "userbot_session_1_", "session_79872582765"]:
         if os.path.exists(f"{name}.session"):
             try:
                 client = TelegramClient(name, API_ID, API_HASH)
