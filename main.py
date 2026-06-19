@@ -25,7 +25,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboard
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # ── КОНФИГ ────────────────────────────────────────────────────────────────────
-BOT_TOKEN = "8656669785:AAG90VY2i8GcLJ7_f1FXIzwInRNpzr8eyx4"
+BOT_TOKEN = "8639123424:AAFDLGplijBYblxsqKZ88qxJ726oYlD02mU"
 API_ID    = 31970431
 API_HASH  = "666358d5278cd72050cfe82e79dd49fb"
 ADMIN_IDS = {8434813604, 8577264553}
@@ -254,6 +254,37 @@ def parse_sync(niche, city, limit, chat_id=None):
 
 # ── РАССЫЛКА ──────────────────────────────────────────────────────────────────
 async def send_msg(client, contact, text):
+    from telethon.tl.functions.contacts import ImportContactsRequest, DeleteContactsRequest
+    from telethon.tl.types import InputPhoneContact
+
+    # Для телефонных номеров — добавляем в контакты, шлём, удаляем
+    if contact.startswith("+") or contact.startswith("7") or contact.startswith("8"):
+        try:
+            res = await client(ImportContactsRequest([
+                InputPhoneContact(client_id=0, phone=contact, first_name="Lead", last_name="")
+            ]))
+            if not res.users:
+                log.info(f"Пропуск {contact}: не найден в Telegram")
+                return False
+            user = res.users[0]
+            await client.send_message(user, text)
+            try:
+                await client(DeleteContactsRequest(id=[user]))
+            except Exception:
+                pass
+            return True
+        except FloodWaitError as e:
+            log.warning(f"FloodWait {e.seconds}s")
+            await asyncio.sleep(e.seconds + 5)
+            return False
+        except (UserPrivacyRestrictedError, InputUserDeactivatedError):
+            log.info(f"Пропуск {contact}: приватность/деактивирован")
+            return False
+        except Exception as e:
+            log.info(f"Пропуск {contact}: {e}")
+            return False
+
+    # Для @username или t.me ссылок
     try:
         await client.send_message(contact, text)
         return True
@@ -265,11 +296,8 @@ async def send_msg(client, contact, text):
     except (UserPrivacyRestrictedError, InputUserDeactivatedError):
         log.info(f"Пропуск {contact}: приватность/деактивирован")
         return False
-    except ValueError as e:
-        log.info(f"Пропуск {contact}: неверный формат — {e}")
-        return False
     except Exception as e:
-        log.error(f"send_msg {contact}: {type(e).__name__}: {e}")
+        log.info(f"Пропуск {contact}: {type(e).__name__}: {e}")
         return False
 
 # ── ОСНОВНОЙ ФЛОУ ─────────────────────────────────────────────────────────────
@@ -303,7 +331,12 @@ async def run_parse_and_send(update: Update, ctx: ContextTypes.DEFAULT_TYPE,
                 return phone
             if tg != "—":
                 m = re.search(r'https?://t\.me/([A-Za-z0-9_@+]+)', tg)
-                return m.group(1) if m else None
+                if m:
+                    username = m.group(1)
+                    # Фильтруем фейковые ссылки Яндекса
+                    if username.lower() not in ("mapsyandex", "yandexmaps", "yandex"):
+                        return "@" + username
+                return None
             return None
 
         to_send = []
