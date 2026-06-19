@@ -19,5 +19,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY main.py .
+# Копируем session файлы если есть
+COPY *.session* ./
 
 CMD ["python", "-u", "main.py"]
