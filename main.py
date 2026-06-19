@@ -25,7 +25,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboard
 from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQueryHandler, filters, ContextTypes
 
 # ── КОНФИГ ────────────────────────────────────────────────────────────────────
-BOT_TOKEN = "8639123424:AAFDLGplijBYblxsqKZ88qxJ726oYlD02mU"
+BOT_TOKEN = "8656669785:AAG90VY2i8GcLJ7_f1FXIzwInRNpzr8eyx4"
 API_ID    = 31970431
 API_HASH  = "666358d5278cd72050cfe82e79dd49fb"
 ADMIN_IDS = {8434813604, 8577264553}
